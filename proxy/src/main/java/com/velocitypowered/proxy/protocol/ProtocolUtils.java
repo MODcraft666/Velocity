@@ -96,6 +96,21 @@ public enum ProtocolUtils {
    * @return the decoded VarInt, or {@code Integer.MIN_VALUE} if the varint is invalid
    */
   public static int readVarIntSafely(ByteBuf buf) {
+    if (!buf.isReadable()) {
+      return Integer.MIN_VALUE;
+    }
+
+    // Fast path for single-byte varints
+    int k = buf.getByte(buf.readerIndex());
+    if ((k & 0x80) != 128) {
+      buf.skipBytes(1);
+      return k;
+    }
+
+    return readVarIntSafelySlow(buf);
+  }
+
+  private static int readVarIntSafelySlow(ByteBuf buf) {
     int i = 0;
     int maxRead = Math.min(5, buf.readableBytes());
     for (int j = 0; j < maxRead; j++) {
@@ -118,6 +133,14 @@ public enum ProtocolUtils {
    * @param value the integer to write
    */
   public static void writeVarInt(ByteBuf buf, int value) {
+    if ((value & ~0x7f) == 0) {
+      buf.writeByte(value);
+      return;
+    }
+    writeVarIntSlow(buf, value);
+  }
+
+  private static void writeVarIntSlow(ByteBuf buf, int value) {
     int length = varIntBytes(value);
     for (int i = 0; i < length; ++i) {
       buf.writeByte(((byte) ((value & 0x7F) | 0x80)));
