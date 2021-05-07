@@ -77,7 +77,7 @@ public class StatusSessionHandler implements MinecraftSessionHandler {
     VelocityConfiguration configuration = server.getConfiguration();
     return new ServerPing(
         new ServerPing.Version(version.getProtocol(),
-            "FishPort " + ProtocolVersion.SUPPORTED_VERSION_STRING),
+            "FishPort 1.16.X"),
         new ServerPing.Players(server.getPlayerCount(), configuration.getShowMaxPlayers(),
             ImmutableList.of()),
         configuration.getMotd(),
